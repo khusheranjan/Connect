@@ -5,11 +5,13 @@ const Register = (props) => {
 
   const {email, setEmail, password, setPassword} = props;
 
+  const API_URL= 'http://localhost:8000'
+
   const handlechange= async (e)=>{
     e.preventDefault();
     
     try {
-      const response= await axios.post("/register", {email, password})
+      const response= await axios.post(API_URL + "/register", {email, password})
       alert(response.data)
     } catch (error) {
       console.log(error);

@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
 //import cookieParser from 'cookie-parser';
-import routes from './src/routes/routes.js'
+//import routes from './src/routes/routes.js'
 import User from './src/models/User.js';
 
 dotenv.config();
@@ -11,10 +11,7 @@ dotenv.config();
 const port= process.env.PORT
 const database_url= process.env.DATABASE_URL 
 
-mongoose.connect(database_url, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
+mongoose.connect(database_url)
     .then(()=> console.log("Datable connection setup"))
     .catch(err => console.error(err));
 
