@@ -13,6 +13,7 @@ const Register = (props) => {
     try {
       const response= await axios.post(API_URL + "/register", {email, password})
       alert(response.data)
+      console.log(email, password)
     } catch (error) {
       console.log(error);
       alert("frontend function problem")

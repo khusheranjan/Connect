@@ -2,9 +2,15 @@ import mongoose from "mongoose";
 
 const profileSchema = new mongoose.Schema({
 
-    name: {
+    username: {
         type: String,
         required: true,
+        unique: true
+    },
+
+    name: {
+        type: String,
+        required: true
     },
    
     avatar: {
@@ -17,6 +23,10 @@ const profileSchema = new mongoose.Schema({
         default: ''
     },
 
+    userProfile: {
+        isSetUp: Boolean,
+        default: false
+    }
     
 });
 

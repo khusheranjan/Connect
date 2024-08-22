@@ -3,49 +3,29 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
 //import cookieParser from 'cookie-parser';
-//import routes from './src/routes/routes.js'
-import User from './src/models/User.js';
+import routes from './src/routes/routes.js'
 
 dotenv.config();
 
 const port= process.env.PORT
-const database_url= process.env.DATABASE_URL 
+const database_url= process.env.DATABASE_URL
+const origin= process.env.ORIGIN 
+const server= express();
 
 mongoose.connect(database_url)
     .then(()=> console.log("Datable connection setup"))
     .catch(err => console.error(err));
 
-const server= express();
 
 server.use(cors({
-    origin: process.env.ORIGIN,
+    origin: origin,
     methods: ["GET", "POST", "DELETE", "PUT"],
     credentials: true
 }));
+
 server.use(express.json());
 
-
-
-server.post('/register', async (req, res)=>{
-    const { email, password } = req.body;
-
-    try {
-        const userExists = await User.findOne({ email });
-
-        if (userExists) {
-        return res.status(400).json({ message: "User already exists!" });
-        }
-
-        const newUser = await User.create({
-        email,
-        password,
-        });
-
-        res.status(201).json({ message: "User successfully registered!" });
-    } catch (error) {
-        res.status(500).json({ message: "Server error. Please try again later." });
-    }
-})
+server.use('/', routes);
 
 
 server.listen(port, ()=>{
