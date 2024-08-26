@@ -1,17 +1,18 @@
 import { useState } from 'react'
-import Register from './components/Register/Register'
+import Login from './pages/Login/Login'
+import Register from './pages/Register/Register';
+import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 
 function App() {
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
   return (
     <>
-      <Register email={email}
-      setEmail= {setEmail}
-      password= {password}
-      setPassword= {setPassword} />
+      <Router>
+        <Routes>
+          <Route exact path="/login" element={<Login />} />
+          <Route exact path="/register" element={<Register />} />
+        </Routes>
+      </Router>
     </>
   )
 }
