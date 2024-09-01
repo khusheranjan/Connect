@@ -1,29 +1,37 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import useUser from '../../Context';
+import { useNavigate } from 'react-router-dom';
 
 const apiurl = import.meta.env.VITE_API_URL;
 
 const Register = () => {
-    const [userData, setUserData] = useState({
+    const {userData, setUserData } = useUser();
+    const navigate = useNavigate();
+    const [localUserData, setLocalUserData] = useState({
         email: '',
         password: '',
         username: '',
         name: '',
-        avatar: '',
-        bio: ''
     });
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-      };
+        setLocalUserData({ ...localUserData, [e.target.name]: e.target.value });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         try {
-            const response = await axios.post(`${apiurl}/register`, userData, { withCredentials: true });
+            const response = await axios.post(`${apiurl}/register`, localUserData, { withCredentials: true });
+            setUserData({
+                email: response.data.user.email,
+                username: response.data.user.username,
+                name: response.data.user.name,
+              });
+              localStorage.setItem("userData", JSON.stringify(response.data.user));
             alert(response.data.message);
-            console.log(response.data);
+            navigate('/dashboard');
         } catch (error) {
             console.log(error);
             alert("Registration failed");
@@ -38,7 +46,7 @@ const Register = () => {
                     type="email"
                     name="email"
                     placeholder="Email"
-                    value={userData.email}
+                    value={localUserData.email}
                     onChange={handleChange} 
                     required
                 />
@@ -46,7 +54,7 @@ const Register = () => {
                     type="password"
                     name="password"
                     placeholder="Password"
-                    value={userData.password}
+                    value={localUserData.password}
                     onChange={handleChange} 
                     required
                 />
@@ -54,7 +62,7 @@ const Register = () => {
                     type="text"
                     name="username"
                     placeholder="Username"
-                    value={userData.username}
+                    value={localUserData.username}
                     onChange={handleChange} 
                     required
                 />
@@ -62,7 +70,7 @@ const Register = () => {
                     type="text"
                     name="name"
                     placeholder="Name"
-                    value={userData.name}
+                    value={localUserData.name}
                     onChange={handleChange}
                 />
                 <button type="submit">Submit</button>

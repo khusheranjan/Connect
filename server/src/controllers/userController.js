@@ -1,5 +1,4 @@
 import User from '../models/User.js';
-import Profile from '../models/Profile.js';
 import jwt from 'jsonwebtoken';
 
 // jwt token creation
@@ -37,8 +36,6 @@ export const register = async (req, res) => {
       password,
       username,
       name,
-      avatar,
-      bio
     });
 
     res.cookie("jwt", createToken(user), {
@@ -54,8 +51,6 @@ export const register = async (req, res) => {
         email: user.email,
         username: user.username,
         name: user.name,
-        avatar: user.avatar,
-        bio: user.bio
       }
     });
 
@@ -95,7 +90,8 @@ export const login= async (req, res)=>{
       user:{
         id: user.id,
         email: user.email,
-        userProfile: user.userProfile,
+        username: user.username,
+        name: user.name,
       }
      })
 
