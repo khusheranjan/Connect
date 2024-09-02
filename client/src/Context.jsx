@@ -1,9 +1,14 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import {io} from 'socket.io-client';
 
-const UserContext = createContext();
+const apiurl= import.meta.env.VITE_API_URL;
+const SocketContext = createContext();
 
-export const UserProvider = ({ children }) => {
-  const [userData, setUserData] = useState(null);
+export const SocketProvider = ({ children }) => {
+  const [userData, setUserData] = useState(() => {
+    const savedUserData = localStorage.getItem('userData');
+    return savedUserData ? JSON.parse(savedUserData) : null;
+  });
 
   useEffect(() => {
     const savedUserData = localStorage.getItem('userData');
@@ -12,15 +17,38 @@ export const UserProvider = ({ children }) => {
     }
   }, []);
 
+  const socket= useRef();
+
+  useEffect(()=>{
+    if(userData){
+      socket.current= io(apiurl, {
+        withCredentials: true,
+        query: {userId: userData.id}
+      });
+      socket.current.on("connect", ()=>{
+        console.log("Connected to the server(client side)")
+      })
+
+      const handleRecievedMessage= (message)=>{
+        
+      }
+      socket.current.on("recievedMessage", handleRecievedMessage)
+
+      return ()=>{
+        socket.current.disconnect();
+      } 
+    }
+  }, [userData]);
+
   return (
-    <UserContext.Provider value={{ userData, setUserData }}>
+    <SocketContext.Provider value={{ userData, setUserData, socket: socket.current }}>
       {children}
-    </UserContext.Provider>
+    </SocketContext.Provider>
   );
 };
 
-const useUser = () => {
-  return useContext(UserContext);
+const useSocket = () => {
+  return useContext(SocketContext);
 };
 
-export default useUser;
+export default useSocket;

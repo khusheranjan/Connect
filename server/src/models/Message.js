@@ -11,6 +11,7 @@ const messageSchema= new mongoose.model({
     reciever:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
+        required: false
     },
 
     content:{
