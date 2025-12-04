@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const messageSchema= new mongoose.model({
+const messageSchema= new mongoose.Schema({
 
     sender:{
         type: mongoose.Schema.Types.ObjectId,
@@ -8,7 +8,7 @@ const messageSchema= new mongoose.model({
         required: true,
     },
 
-    reciever:{
+    receiver:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: false

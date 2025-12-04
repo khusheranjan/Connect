@@ -10,6 +10,11 @@ export const SocketProvider = ({ children }) => {
     return savedUserData ? JSON.parse(savedUserData) : null;
   });
 
+  const [messages, setMessages] = useState([]);
+  const [channelMessages, setChannelMessages] = useState({});
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
+
   useEffect(() => {
     const savedUserData = localStorage.getItem('userData');
     if (savedUserData) {
@@ -29,19 +34,55 @@ export const SocketProvider = ({ children }) => {
         console.log("Connected to the server(client side)")
       })
 
-      const handleRecievedMessage= (message)=>{
-        
+      const handleReceivedMessage= (message)=>{
+        console.log("Received message:", message);
+        setMessages(prev => [...prev, message]);
       }
-      socket.current.on("recievedMessage", handleRecievedMessage)
+
+      const handleChannelMessage = (data) => {
+        console.log("Received channel message:", data);
+        setChannelMessages(prev => ({
+          ...prev,
+          [data.channelId]: [...(prev[data.channelId] || []), data.message]
+        }));
+      }
+
+      const handleUserOnline = (userId) => {
+        setOnlineUsers(prev => new Set([...prev, userId]));
+      }
+
+      const handleUserOffline = (userId) => {
+        setOnlineUsers(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(userId);
+          return newSet;
+        });
+      }
+
+      socket.current.on("receiveMessage", handleReceivedMessage)
+      socket.current.on("receiveChannelMessage", handleChannelMessage)
+      socket.current.on("userOnline", handleUserOnline)
+      socket.current.on("userOffline", handleUserOffline)
 
       return ()=>{
         socket.current.disconnect();
-      } 
+      }
     }
   }, [userData]);
 
   return (
-    <SocketContext.Provider value={{ userData, setUserData, socket: socket.current }}>
+    <SocketContext.Provider value={{
+      userData,
+      setUserData,
+      socket: socket.current,
+      messages,
+      setMessages,
+      channelMessages,
+      setChannelMessages,
+      selectedUser,
+      setSelectedUser,
+      onlineUsers
+    }}>
       {children}
     </SocketContext.Provider>
   );

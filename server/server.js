@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import routes from './src/routes/routes.js';
 import { Server } from 'socket.io';
 import Message from './src/models/Message.js';
+import Room from './src/models/Room.js';
 
 dotenv.config();
 
@@ -53,21 +54,69 @@ const disconnectSocket = (socket) => {
 };
 
 const sendMessage= async (message)=>{
-    const senderSockectId= userSocketMap.get(message.sender);
-    const recieverSockectId= userSocketMap.get(message.reciever);
+    const senderSocketId= userSocketMap.get(message.sender);
+    const receiverSocketId= userSocketMap.get(message.receiver);
 
     const newMessage= await Message.create(message);
 
     const messageData= await Message.findById(newMessage._id)
-        .populate("sender", "id email username name")
-        .populate("reciever", "id email username name")
+        .populate("sender", "id email username name avatar")
+        .populate("receiver", "id email username name avatar")
 
-    if(recieverSockectId){
-        io.to(recieverSockectId).emit("recievedMessage", messageData);
+    if(receiverSocketId){
+        io.to(receiverSocketId).emit("receiveMessage", messageData);
     }
-    if(senderSockectId){
-        io.to(senderSockectId).emit("recievedMessage", messageData);
+    if(senderSocketId){
+        io.to(senderSocketId).emit("receiveMessage", messageData);
     }
+}
+
+const sendChannelMessage = async (data) => {
+    try {
+        const { channelId, senderId, content } = data;
+
+        const channel = await Room.findById(channelId);
+        if (!channel) {
+            console.error('Channel not found');
+            return;
+        }
+
+        // Check if sender is a member
+        if (!channel.members.includes(senderId)) {
+            console.error('Sender is not a member of this channel');
+            return;
+        }
+
+        const newMessage = await Message.create({
+            sender: senderId,
+            content: content,
+            timestamp: new Date()
+        });
+
+        channel.messages.push(newMessage._id);
+        await channel.save();
+
+        const messageData = await Message.findById(newMessage._id)
+            .populate("sender", "id email username name avatar");
+
+        // Broadcast to all members in the channel
+        channel.members.forEach(memberId => {
+            const memberSocketId = userSocketMap.get(memberId.toString());
+            if (memberSocketId) {
+                io.to(memberSocketId).emit("receiveChannelMessage", {
+                    channelId: channelId,
+                    message: messageData
+                });
+            }
+        });
+    } catch (error) {
+        console.error('Error sending channel message:', error);
+    }
+}
+
+const joinChannelRoom = async (data) => {
+    const { channelId, userId } = data;
+    console.log(`User ${userId} joining channel ${channelId}`);
 }
 
 io.on("connection", (socket) => {
@@ -77,9 +126,21 @@ io.on("connection", (socket) => {
     if (userId) {
         userSocketMap.set(userId, socket.id);
         console.log('User connected with socket ID:', socket.id);
+
+        // Broadcast to all clients that this user is online
+        io.emit("userOnline", userId);
     } else {
         console.log("User not connected");
     }
-    socket.on("sendMessage", sendMessage)
-    socket.on("disconnect", () => disconnectSocket(socket));
+
+    socket.on("sendMessage", sendMessage);
+    socket.on("sendChannelMessage", sendChannelMessage);
+    socket.on("joinChannel", joinChannelRoom);
+    socket.on("disconnect", () => {
+        disconnectSocket(socket);
+        // Broadcast to all clients that this user is offline
+        if (userId) {
+            io.emit("userOffline", userId);
+        }
+    });
 });

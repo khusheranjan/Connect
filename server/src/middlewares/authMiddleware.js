@@ -1,4 +1,4 @@
-import verify from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 const autheticated= (req, res, next)=>{
     const token= req.cookies.jwt;
     if(!token){
