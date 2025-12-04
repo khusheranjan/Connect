@@ -119,6 +119,18 @@ const joinChannelRoom = async (data) => {
     console.log(`User ${userId} joining channel ${channelId}`);
 }
 
+const handleTyping = (data) => {
+    const { receiverId, senderId, isTyping } = data;
+    const receiverSocketId = userSocketMap.get(receiverId);
+
+    if (receiverSocketId) {
+        io.to(receiverSocketId).emit("userTyping", {
+            userId: senderId,
+            isTyping: isTyping
+        });
+    }
+}
+
 io.on("connection", (socket) => {
     console.log("Socket connection set up on server side");
 
@@ -136,6 +148,7 @@ io.on("connection", (socket) => {
     socket.on("sendMessage", sendMessage);
     socket.on("sendChannelMessage", sendChannelMessage);
     socket.on("joinChannel", joinChannelRoom);
+    socket.on("typing", handleTyping);
     socket.on("disconnect", () => {
         disconnectSocket(socket);
         // Broadcast to all clients that this user is offline

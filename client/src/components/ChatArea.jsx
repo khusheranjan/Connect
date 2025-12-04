@@ -7,13 +7,14 @@ import useSocket from '../Context';
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const ChatArea = () => {
-  const { selectedUser, messages, setMessages, socket, userData, onlineUsers } = useSocket();
+  const { selectedUser, messages, setMessages, socket, userData, onlineUsers, typingUsers } = useSocket();
   const [conversationMessages, setConversationMessages] = useState([]);
   const [channelMembers, setChannelMembers] = useState([]);
   const [showMembers, setShowMembers] = useState(false);
 
   const isChannel = selectedUser?.isChannel;
   const isOnline = onlineUsers && selectedUser && onlineUsers.has(selectedUser._id);
+  const isTyping = !isChannel && selectedUser && typingUsers[selectedUser._id];
 
   useEffect(() => {
     if (selectedUser) {
@@ -366,6 +367,54 @@ const ChatArea = () => {
       )}
 
       <MessageList messages={conversationMessages} currentUserId={userData?.id} isChannel={isChannel} />
+
+      {/* Typing Indicator */}
+      {isTyping && (
+        <div style={{
+          padding: '8px 20px',
+          backgroundColor: '#fafafa',
+          borderTop: '1px solid #e4e6eb',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <div style={{
+            display: 'flex',
+            gap: '4px',
+            alignItems: 'center'
+          }}>
+            <div className="typing-dot" style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: '#0084ff',
+              animation: 'typingAnimation 1.4s infinite'
+            }}></div>
+            <div className="typing-dot" style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: '#0084ff',
+              animation: 'typingAnimation 1.4s infinite 0.2s'
+            }}></div>
+            <div className="typing-dot" style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: '#0084ff',
+              animation: 'typingAnimation 1.4s infinite 0.4s'
+            }}></div>
+          </div>
+          <span style={{
+            fontSize: '13px',
+            color: '#65676b',
+            fontStyle: 'italic'
+          }}>
+            {selectedUser.name} is typing...
+          </span>
+        </div>
+      )}
+
       <MessageInput onSendMessage={handleSendMessage} />
     </div>
   );

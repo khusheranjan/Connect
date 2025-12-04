@@ -1,15 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import useSocket from '../Context';
 
 const MessageInput = ({ onSendMessage }) => {
   const [message, setMessage] = useState('');
+  const { socket, selectedUser, userData } = useSocket();
+  const typingTimeoutRef = useRef(null);
+
+  const emitTyping = (isTyping) => {
+    if (!socket || !selectedUser || selectedUser.isChannel) return;
+
+    socket.emit('typing', {
+      senderId: userData.id,
+      receiverId: selectedUser._id,
+      isTyping: isTyping
+    });
+  };
+
+  const handleInputChange = (e) => {
+    setMessage(e.target.value);
+
+    // Emit typing = true
+    emitTyping(true);
+
+    // Clear previous timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set timeout to emit typing = false after 2 seconds of no typing
+    typingTimeoutRef.current = setTimeout(() => {
+      emitTyping(false);
+    }, 2000);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (message.trim()) {
+      // Clear typing indicator when sending message
+      emitTyping(false);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
       onSendMessage(message);
       setMessage('');
     }
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      emitTyping(false);
+    };
+  }, [selectedUser]);
 
   return (
     <form onSubmit={handleSubmit} style={{
@@ -23,7 +69,7 @@ const MessageInput = ({ onSendMessage }) => {
       <input
         type="text"
         value={message}
-        onChange={(e) => setMessage(e.target.value)}
+        onChange={handleInputChange}
         placeholder="Type a message..."
         style={{
           flex: 1,

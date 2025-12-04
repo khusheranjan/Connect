@@ -114,6 +114,17 @@ input:focus, textarea:focus {
   }
 }
 
+@keyframes typingAnimation {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  30% {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
+}
+
 .fade-in {
   animation: fadeIn 0.3s ease;
 }

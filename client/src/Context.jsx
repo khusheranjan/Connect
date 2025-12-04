@@ -14,6 +14,7 @@ export const SocketProvider = ({ children }) => {
   const [channelMessages, setChannelMessages] = useState({});
   const [selectedUser, setSelectedUser] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const [typingUsers, setTypingUsers] = useState({});
 
   useEffect(() => {
     const savedUserData = localStorage.getItem('userData');
@@ -59,10 +60,18 @@ export const SocketProvider = ({ children }) => {
         });
       }
 
+      const handleUserTyping = ({ userId, isTyping }) => {
+        setTypingUsers(prev => ({
+          ...prev,
+          [userId]: isTyping
+        }));
+      }
+
       socket.current.on("receiveMessage", handleReceivedMessage)
       socket.current.on("receiveChannelMessage", handleChannelMessage)
       socket.current.on("userOnline", handleUserOnline)
       socket.current.on("userOffline", handleUserOffline)
+      socket.current.on("userTyping", handleUserTyping)
 
       return ()=>{
         socket.current.disconnect();
@@ -81,7 +90,8 @@ export const SocketProvider = ({ children }) => {
       setChannelMessages,
       selectedUser,
       setSelectedUser,
-      onlineUsers
+      onlineUsers,
+      typingUsers
     }}>
       {children}
     </SocketContext.Provider>
